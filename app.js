@@ -1,88 +1,64 @@
-// ==========================
-//  "Base de datos" simulada
-// ==========================
-const productosBD = [
-  { id: 1, nombre: "Arroz Extra 50 kg" },
-  { id: 2, nombre: "Arroz Superior 25 kg" },
-  { id: 3, nombre: "Arroz Corriente 5 kg" },
-  { id: 4, nombre: "Azúcar rubia 50 kg" },
-  { id: 5, nombre: "Aceite vegetal 1 L" }
-  // Aquí puedes agregar más productos...
-];
-
-// Cargar productos en el datalist
-const datalistProductos = document.getElementById("lista-productos");
-productosBD.forEach(p => {
-  const option = document.createElement("option");
-  option.value = p.nombre;
-  datalistProductos.appendChild(option);
-});
-
-// ==========================
-//  Calcular fecha vencimiento
-// ==========================
 const inputFechaProd = document.getElementById("fechaProduccion");
 const inputFechaVenc = document.getElementById("fechaVencimiento");
 
-inputFechaProd.addEventListener("change", () => {
-  const valor = inputFechaProd.value; // formato: yyyy-mm-dd
+// Función para sumar 8 meses sin que cambie el día
+function sumarMesesManteniendoDia(fecha, meses) {
+  const dia = fecha.getDate();
+  const nueva = new Date(fecha);
+  nueva.setMonth(nueva.getMonth() + meses);
+
+  // Si el mes ajustado cambia el día (como 31 -> 30), lo forzamos al mismo día
+  if (nueva.getDate() !== dia) {
+    nueva.setDate(dia);
+  }
+
+  return nueva;
+}
+
+// Detectar si el usuario ingresa NOV25, DIC25, etc.
+function convertirMesLetrasAFecha(texto) {
+  const meses = {
+    ENE: 0, FEB: 1, MAR: 2, ABR: 3, MAY: 4, JUN: 5,
+    JUL: 6, AGO: 7, SEP: 8, OCT: 9, NOV: 10, DIC: 11
+  };
+
+  // Ej: NOV25 → ["NOV", "25"]
+  const regex = /^([A-Za-z]{3})(\d{2})$/;
+  const match = texto.toUpperCase().match(regex);
+
+  if (!match) return null;
+
+  const mes = meses[match[1]];
+  const anio = 2000 + parseInt(match[2]);
+
+  return new Date(anio, mes, 1); // Día = 1 por defecto
+}
+
+inputFechaProd.addEventListener("input", () => {
+  const valor = inputFechaProd.value.trim();
+
+  let fecha;
 
   if (!valor) return;
 
-  const fechaProd = new Date(valor);
-  if (isNaN(fechaProd.getTime())) return;
+  // Caso 1 → fecha normal yyyy-mm-dd
+  if (valor.includes("-")) {
+    fecha = new Date(valor);
+  } 
+  // Caso 2 → formato NOV25
+  else {
+    fecha = convertirMesLetrasAFecha(valor);
+  }
 
-  // Sumar 8 meses
-  const fechaVenc = new Date(fechaProd);
-  fechaVenc.setMonth(fechaVenc.getMonth() + 8);
+  if (!fecha || isNaN(fecha.getTime())) return;
 
-  const year = fechaVenc.getFullYear();
-  const month = String(fechaVenc.getMonth() + 1).padStart(2, "0");
-  const day = String(fechaVenc.getDate()).padStart(2, "0");
+  // Sumar 8 meses manteniendo el día
+  const venc = sumarMesesManteniendoDia(fecha, 8);
 
+  const year = venc.getFullYear();
+  const month = String(venc.getMonth() + 1).padStart(2, "0");
+  const day = String(venc.getDate()).padStart(2, "0");
+
+  // Mostrar siempre formato ISO en el input
   inputFechaVenc.value = `${year}-${month}-${day}`;
 });
-
-// ==========================
-//  Manejo del formulario
-// ==========================
-const form = document.getElementById("form-registro");
-const tbody = document.querySelector("#tabla-registros tbody");
-
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const registro = {
-    tienda: document.getElementById("tienda").value.trim(),
-    producto: document.getElementById("producto").value.trim(),
-    lote: document.getElementById("lote").value.trim(),
-    fechaProduccion: document.getElementById("fechaProduccion").value,
-    fechaVencimiento: document.getElementById("fechaVencimiento").value,
-    cantidad: document.getElementById("cantidad").value
-  };
-
-  // Mostrar en consola (podrías enviarlo a una API real en el futuro)
-  console.log("Registro guardado:", registro);
-
-  // Agregar fila a la tabla
-  const tr = document.createElement("tr");
-  tr.innerHTML = `
-    <td>${registro.tienda}</td>
-    <td>${registro.producto}</td>
-    <td>${registro.lote}</td>
-    <td>${formatoFechaLindo(registro.fechaProduccion)}</td>
-    <td>${formatoFechaLindo(registro.fechaVencimiento)}</td>
-    <td>${registro.cantidad}</td>
-  `;
-  tbody.appendChild(tr);
-
-  // Limpiar formulario excepto tienda (si quieres)
-  form.reset();
-});
-
-// Formato de fecha para tabla (yyyy-mm-dd -> dd/mm/yyyy)
-function formatoFechaLindo(fechaISO) {
-  if (!fechaISO) return "";
-  const [y, m, d] = fechaISO.split("-");
-  return `${d}/${m}/${y}`;
-}
