@@ -34,12 +34,25 @@
         <label for="lote">Lote</label>
         <input type="text" id="lote" name="lote" placeholder="Ej: L-2025-001" required>
       </div>
+      <!-- Selector de modo -->
+<div class="campo">
+  <label>Modo de fecha de producción:</label>
 
-      <!-- 4. Fecha de producción -->
-      <div class="campo">
-        <label for="fechaProduccion">Fecha de producción</label>
-        <input type="date" id="fechaProduccion" name="fechaProduccion" required>
-      </div>
+  <div>
+    <input type="radio" id="modoExacto" name="modoFecha" value="exacto" checked>
+    <label for="modoExacto">Fecha exacta (día/mes/año)</label>
+  </div>
+
+  <div>
+    <input type="radio" id="modoMesAnio" name="modoFecha" value="mesanio">
+    <label for="modoMesAnio">Solo Mes/Año (Ej: NOV25)</label>
+  </div>
+</div>
+
+<div class="campo">
+  <label for="fechaProduccion">Fecha de producción</label>
+  <input type="text" id="fechaProduccion" placeholder="Seleccione modo arriba" required>
+</div>
 
       <!-- 5. Fecha de vencimiento (8 meses después) -->
       <div class="campo">
