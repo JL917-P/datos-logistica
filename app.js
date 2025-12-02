@@ -21,7 +21,7 @@ productosBD.forEach(p => {
   datalistProductos.appendChild(option);
 });
 
-// Convertir MMMYY → Date
+// Convertir MMMYY → Date(anio, mes, dia=1)
 function convertirMesLetrasAFecha(texto) {
   const meses = {
     ENE: 0, FEB: 1, MAR: 2, ABR: 3, MAY: 4, JUN: 5,
@@ -39,17 +39,15 @@ function convertirMesLetrasAFecha(texto) {
   return new Date(anio, mes, 1);
 }
 
-// Sumar meses manteniendo el mismo día
+// Sumar meses manteniendo el día (modo exacto)
 function sumarMesesManteniendoDia(fecha, meses) {
-  const dia = fecha.getDate();
+  const diaOriginal = fecha.getDate();
   const nueva = new Date(fecha);
   nueva.setMonth(nueva.getMonth() + meses);
 
-  // Arreglo si el día cambia al cambiar de mes
-  if (nueva.getDate() !== dia) {
-    nueva.setDate(dia);
+  if (nueva.getDate() !== diaOriginal) {
+    nueva.setDate(diaOriginal);
   }
-
   return nueva;
 }
 
@@ -58,31 +56,46 @@ inputFechaProd.addEventListener("input", () => {
   const valor = inputFechaProd.value.trim();
   let fecha;
 
-  // MODO EXACTO (input debe ser yyyy-mm-dd)
+  // -----------------------------------------------
+  // MODO 1: FECHA EXACTA (yyyy-mm-dd)
+  // -----------------------------------------------
   if (modoExacto.checked) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return;
     fecha = new Date(valor);
+
+    const venc = sumarMesesManteniendoDia(fecha, 8);
+
+    const year = venc.getFullYear();
+    const month = String(venc.getMonth() + 1).padStart(2, "0");
+    const day = String(venc.getDate()).padStart(2, "0");
+
+    inputFechaVenc.value = `${year}-${month}-${day}`;
   }
 
-  // MODO MES/AÑO (formato MMMYY)
+  // -----------------------------------------------
+  // MODO 2: SOLO MES/AÑO (formato MMMYY)
+  // -----------------------------------------------
   if (modoMesAnio.checked) {
     fecha = convertirMesLetrasAFecha(valor);
+    if (!fecha) return;
+
+    // Sumar 8 meses sin día
+    fecha.setMonth(fecha.getMonth() + 8);
+
+    const mesesLetras = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL",
+                         "AGO","SEP","OCT","NOV","DIC"];
+
+    const mesL = mesesLetras[fecha.getMonth()];
+    const anioYY = String(fecha.getFullYear()).slice(2);
+
+    // Mostrar directamente MMMYY
+    inputFechaVenc.value = `${mesL}${anioYY}`;
   }
-
-  if (!fecha || isNaN(fecha.getTime())) return;
-
-  const venc = sumarMesesManteniendoDia(fecha, 8);
-
-  const year = venc.getFullYear();
-  const month = String(venc.getMonth() + 1).padStart(2, "0");
-  const day = String(venc.getDate()).padStart(2, "0");
-
-  inputFechaVenc.value = `${year}-${month}-${day}`;
 });
 
 // Cambiar placeholder según modo
 modoExacto.addEventListener("change", () => {
-  inputFechaProd.placeholder = "Ej: 2025-11-04";
+  inputFechaProd.placeholder = "Ej: 2025-12-05";
   inputFechaProd.value = "";
   inputFechaVenc.value = "";
 });
